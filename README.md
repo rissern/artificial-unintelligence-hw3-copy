@@ -2,6 +2,8 @@
 
 # HW03: Semantic Segmentation and Model Monitoring
 
+Artificial Unintelligence
+
 AJ Moon,
 Brian Le,
 Joshua Cordero,
