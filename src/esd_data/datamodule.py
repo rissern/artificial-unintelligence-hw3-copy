@@ -170,37 +170,57 @@ class ESDDataModule(pl.LightningDataModule):
         """
         # --- start here ---
         # if the processed_dir does not exist or its empty
+        if not self.processed_dir.exists() or len(list(self.processed_dir.glob("*"))) == 0:
 
             # get the a list of the tile directories from the raw directory (use .glob() for simplicity)
+            tile_dirs = list(self.raw_dir.glob("*"))
 
             # call the train_test_split function.
             # The arrays will be the above list, the test_size will be 1 - train size, and the random_state will be the seed.
             # The output of this function will be a tuple, (tile directories for training the model, tile directories for validating the model).
             # Save the output into the two variables tile_dirs_train and tile_dirs_val.
+            tile_dirs_train, tile_dirs_val = train_test_split(
+                tile_dirs, test_size=1 - self.train_size, random_state=self.seed
+            )
 
 
             # We have now created the train test split. We are going to subtile and save these into
             # the self.train_dir and self.val_dir
 
+
             # iterate over the tile directories in tqdm(list(tile_dirs_train), desc="Processing train tiles")
+            for tile_dir in tqdm(list(tile_dirs_train), desc="Processing train tiles"):
 
                 # get the data array list and gt data array from load_and_preprocess
-
+                data_array_list, gt_data_array = self.load_and_preprocess(tile_dir)
 
                 # create a subtile, passing the data array list, gt data array, and the slice size
+                subtile = Subtile(
+                    satellite_list=data_array_list,
+                    ground_truth=gt_data_array,
+                    slice_size=self.slice_size,
+                )
 
                 # save the subtile to the train_dir
+                subtile.save(self.train_dir)
 
 
             # iterate over the tile directories in tqdm(list(tile_dirs_val), desc="Processing validation tiles"):
+            for tile_dir in tqdm(list(tile_dirs_val), desc="Processing validation tiles"):
 
                 # get the data array list and gt data array from load_and_preprocess
-
+                data_array_list, gt_data_array = self.load_and_preprocess(tile_dir)
 
                 # create a subtile, passing the data array list, gt data array, and the slice size
+                subtile = Subtile(
+                    satellite_list=data_array_list,
+                    ground_truth=gt_data_array,
+                    slice_size=self.slice_size,
+                )
 
                 # save the subtile to the val_dir
-        raise NotImplementedError
+                subtile.save(self.val_dir)
+
 
 
     def setup(self, stage: str) -> None:
@@ -210,10 +230,10 @@ class ESDDataModule(pl.LightningDataModule):
         if stage == "fit":
             # --- start here ---
             # create the train ESDDataset (the processed_dir will be the train_dir)
+            self.train_dataset  = ESDDataset(processed_dir=self.train_dir, transform=self.transform, satellite_type_list=self.satellite_type_list, slice_size=self.slice_size)
 
             # create the val ESDDataset (the processed_dir will be the val_dir)
-
-            raise NotImplementedError
+            self.val_dataset = ESDDataset(processed_dir=self.val_dir, transform=self.transform, satellite_type_list=self.satellite_type_list, slice_size=self.slice_size)
 
 
     def train_dataloader(self) -> torch.utils.data.DataLoader:
@@ -222,7 +242,7 @@ class ESDDataModule(pl.LightningDataModule):
         """
         # create the torch.utils.data.Dataloader for the train_dataset, passing the batch size
         # and collate_fn
-        raise NotImplementedError
+        return torch.utils.data.DataLoader(self.train_dataset, batch_size=self.batch_size, collate_fn=collate_fn)
 
     def val_dataloader(self) -> torch.utils.data.DataLoader:
         """
@@ -230,4 +250,4 @@ class ESDDataModule(pl.LightningDataModule):
         """
         # create the torch.utils.data.Dataloader for the val_dataset, passing the batch size
         # and collate_fn
-        raise NotImplementedError
+        return torch.utils.data.DataLoader(self.val_dataset, batch_size=self.batch_size, collate_fn=collate_fn)

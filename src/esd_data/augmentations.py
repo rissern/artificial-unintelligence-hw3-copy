@@ -51,9 +51,10 @@ class Blur(object):
         # --- start here ---
 
         # apply per band the cv2.blur function (you can pass it as a lambda)
+        blur_img = apply_per_band(img, lambda x: cv2.blur(x, (kernel, kernel)))
 
         # return the {X : img, y : mask}
-        raise NotImplementedError
+        return {"X": blur_img, "y": mask}
 
 
 class AddNoise(object):
@@ -102,14 +103,17 @@ class AddNoise(object):
         # --- start here ---
 
         # calculate the random standard deviation between 0 and the standard limit
+        randome_std_dev = random.uniform(0, self.std_lim)
 
         # generate the noise using a random normal distribution from the mean, random standard deviation, and in the shape of the img
+        noise = np.random.normal(self.mean, randome_std_dev, img.shape)
 
         # add the noise to the img and clip between 0 and 1
+        noisy_img = np.clip(img + noise, 0, 1)
 
 
         # return the {X : img, y : mask}
-        raise NotImplementedError
+        return {"X": noisy_img, "y": mask}
 
 
 class RandomVFlip(object):
@@ -144,14 +148,17 @@ class RandomVFlip(object):
         # some sort of if statement that uses self.p to determine whether or not to act,
         # probably using random.random() (there are so many ways to do this, we just want it to
         # act only self.p% of the time)
+        if random.random() < self.p:
 
             # apply per band the cv2.flip function (you can pass it as a lambda)
+            img = apply_per_band(img, lambda x: cv2.flip(x, 0))
 
             # also flip the mask (not per band, just directly on the mask)
+            mask = cv2.flip(mask, 0)
 
 
         # return the {X : img, y : mask}
-        raise NotImplementedError
+        return {"X": img, "y": mask}
 
 
 class RandomHFlip(object):
@@ -186,14 +193,17 @@ class RandomHFlip(object):
         # some sort of if statement that uses self.p to determine whether or not to act,
         # probably using random.random() (there are so many ways to do this, we just want it to
         # act only self.p% of the time)
+        if random.random() < self.p:
 
             # apply per band the cv2.flip function (you can pass it as a lambda)
+            img = apply_per_band(img, lambda x: cv2.flip(x, 1))
 
             # also flip the mask (not per band, just directly on the mask)
+            mask = cv2.flip(mask, 1)
 
 
         # return the {X : img, y : mask}
-        raise NotImplementedError
+        return {"X": img, "y": mask}
 
 
 class ToTensor(object):

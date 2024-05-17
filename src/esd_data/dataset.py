@@ -47,13 +47,16 @@ class ESDDataset(Dataset):
 
         # --- start here ---
         # initialize a list for the subtile_dirs
+        self.subtile_dirs = []
 
         # iterate over the tiles in the processed_dir / subtiles
+        for tile in processed_dir.glob("subtiles/*"):
 
             # iterate over the subtiles within the tile
+            for subtile in tile.glob("*"):
 
                 # append the subtile to the subtile_dirs list
-        raise NotImplementedError
+                self.subtile_dirs.append(subtile)
 
     def __len__(self) -> int:
         """
@@ -63,7 +66,7 @@ class ESDDataset(Dataset):
             length: number of subtiles in the dataset
         """
         # --- start here ---
-        raise NotImplementedError
+        return len(self.subtile_dirs)
 
     def __aggregate_time(self, array: np.ndarray):
         """
@@ -85,7 +88,11 @@ class ESDDataset(Dataset):
                 (time*bands, width, height) array
         """
         # merge the time and bands dimension (hint: use np.stack or np.reshape)
-        raise NotImplementedError
+        
+        time, bands, width, height = array.shape
+        new_img = array.reshape(time*bands, width, height)
+
+        return new_img
 
     def __getitem__(self, idx):
         """
@@ -104,31 +111,45 @@ class ESDDataset(Dataset):
                 ground truth, of shape (1, width, height)
         """
         # create a subtile and load by directory. The directory to load from will be the subtile_dirs at idx.
+        subtile = Subtile.load_subtile_by_dir(self.subtile_dirs[idx], self.satellite_type_list, self.slice_size)
 
         # get the data_array_list and ground truth from the subtile satellite list and ground truth
+        data_array_list = subtile.satellite_list
+        ground_truth = subtile.ground_truth
 
         # convert items to their .values form, we are stripping away the xarray so we can feed the data into the model
+        data_array_list = [data_array.values for data_array in data_array_list]
+        ground_truth = ground_truth.values
 
         # initalize a list to store X
+        X = []
 
         # iterate over each array in the stripped array from above
+        for array in data_array_list:
 
             # aggregate time and append the array to X
+            X.append(self.__aggregate_time(array))
 
 
         # concatenate X
+        X = np.concatenate(X, axis=0)
 
         # set y to be the ground truth data array .values squeezed on the 0 and 1 axis
+        y = ground_truth.squeeze(0).squeeze(0)
 
 
         # if the transform is not none
+        if self.transform is not None:
 
             # apply the transform to X and y and store the result
+            transform_result = self.transform({"X": X, "y": y})
 
             # set X to be the result for X
+            X = transform_result["X"]
 
             # set y to be the result for y
+            y = transform_result["y"]
 
 
         # return X and y-1, labels go from 1-4, so y-1 makes them zero indexed
-        raise NotImplementedError
+        return X, y-1

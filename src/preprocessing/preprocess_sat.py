@@ -28,17 +28,24 @@ def gaussian_filter(data_array: xr.DataArray, sigma: float = 1) -> xr.DataArray:
     xr.DataArray
         The filtered data_array. The shape of the array is (date, band, height, width).
     """
+
+    filtered_data = data_array.copy(deep=True)
+
     # iterate by date
+    for date in range(data_array.shape[0]):
     
         # iterate by band
+        for band in range(data_array.shape[1]):
         
             # apply the scipy.ndimage gaussian_filter function to the data_array[date][band]
             # and pass sigma
+            filtered_data[date][band] = scipy.ndimage.gaussian_filter(
+                data_array[date][band], sigma
+            )
             
 
-    # return the data array
-    raise NotImplementedError
-
+    # return the filtered_data as a xr.DataArray
+    return filtered_data
 
 def quantile_clip(
     data_array: xr.DataArray, clip_quantile: float, group_by_time=True
@@ -66,27 +73,43 @@ def quantile_clip(
         The clipped image data_array. The shape of the array is (date, band, height, width).
     """
 
+    clipped_data = data_array.copy(deep=True)
+
     # if group_by_time is true
+    if group_by_time:
     
         # iterate by band
+        for band in range(data_array.shape[1]):
         
             # calculate the q1 and q2 for the band using the higher and lower methods
+            q1 = np.quantile(data_array[:, band], clip_quantile, method="higher")
+            q2 = np.quantile(data_array[:, band], 1 - clip_quantile, method="lower")
             
             # iterate by date
+            for date in range(data_array.shape[0]):
+            
+                # clip the image (date, band) using q1 and q2
+                clipped_data[date, band] = np.clip(data_array[date, band], q1, q2)
             
     # else
+    else:
     
         # iterate by band
+        for band in range(data_array.shape[1]):
         
             # iterate by date
+            for date in range(data_array.shape[0]):
             
                 # get quantile for the image (date, band) using the higher and lower methods
+                q1 = np.quantile(data_array[date, band], clip_quantile, method="higher")
+                q2 = np.quantile(data_array[date, band], 1 - clip_quantile, method="lower")
                 
                 # apply clipping for each image (date, band) using q1 and q2
+                clipped_data[date, band] = np.clip(data_array[date, band], q1, q2)
                 
 
     # return the data_array
-    raise NotImplementedError
+    return clipped_data
 
 
 def minmax_scale(data_array: xr.DataArray, group_by_time=True) -> xr.DataArray:
@@ -109,56 +132,87 @@ def minmax_scale(data_array: xr.DataArray, group_by_time=True) -> xr.DataArray:
     xr.DataArray
         The minmax scaled data_array. The shape of the array is (date, band, height, width).
     """
+
+    scaled_data = data_array.copy(deep=True)
+
     # if group_by_time is true
+    if group_by_time:
     
         # iterate by band
+        for band in range(data_array.shape[1]):
         
             # create 2 lists to store the minimums and maximums of the images
+            min_list = []
+            max_list = []
             
             # iterate by date
+            for date in range(data_array.shape[0]):
             
                 # append the minimum value and maximum value of the image (date, band)
+                min_list.append(np.min(data_array[date, band].values))
+                max_list.append(np.max(data_array[date, band].values))
                
 
             # get the min of the minimum list and the max of the maximum list
+            img_min = np.min(min_list)
+            img_max = np.max(max_list)
             
 
             # iterate by date
+            for date in range(data_array.shape[0]):
             
                 # if the min == max, set the image (date, band) to an array of ones using
                 # np.ones. Sometimes, satellite images can just be blank, so we would either make
                 # the image all 0's or all 1's, and because we do not want any divide by zero errors
                 # down the road, we will set it all to an array of ones.
+                if img_min == img_max:
                 
                     # set the array to np.ones
+                    scaled_data[date, band] = np.ones(data_array.shape[2:])
                     
                 # else
+                else:
                     # use the (pixel_value - img_min)/(img_max - img_min) formula to calculate the scaled
                     # image (date, band). If you use np functions to do the math, you can replace the pixel_value
                     # with the image (date, band) and it will calculate it as a matrix operation.
+                    scaled_data[date, band] = (data_array[date, band] - img_min) / (img_max - img_min)
                     
     # else
+    else:
     
         # iterate by date
+        for date in range(data_array.shape[0]):
         
             # iterate by band
+            for band in range(data_array.shape[1]):
             
                 # calculate the min and max of the image (date, band)
+                img_min = np.min(data_array[date, band].values)
+                img_max = np.max(data_array[date, band].values)
+
+                # img_min = np.min([img_min])
+                # img_max = np.max([img_max])
                
 
                 # if the min == max, set the image (date, band) to an array of ones using
                 # np.ones. Sometimes, satellite images can just be blank, so we would either make
                 # the image all 0's or all 1's, and because we do not want any divide by zero errors
                 # down the road, we will set it all to an array of ones.
+                if img_min == img_max:
+                
+                    # set the array to np.ones
+                    scaled_data[date, band] = np.ones(data_array.shape[2:])
                 
                 # else
+                else:
                 
                     # use the (pixel_value - img_min)/(img_max - img_min) formula to calculate the scaled
                     # image (date, band). If you use np functions to do the math, you can replace the pixel_value
                     # with the image (date, band) and it will calculate it as a matrix operation.
+                    scaled_data[date, band] = (data_array[date, band] - img_min) / (img_max - img_min)
                     
     # return the data_array
-    raise NotImplementedError
+    return scaled_data
 
 
 def brighten(
@@ -179,15 +233,21 @@ def brighten(
     xr.DataArray
         The brightened image. The shape of the array is (date, band, height, width).
     """
+
+    brightened_data = data_array.copy(deep=True)
+
     # iterate by date
+    for date in range(data_array.shape[0]):
     
         # iterate by band
+        for band in range(data_array.shape[1]):
         
             # brighten the image using the formula. If you use np functions to do the math, you can replace the pixel_value
             # with the image (date, band) and it will calculate it as a matrix operation.
+            brightened_data[date, band] = alpha * data_array[date, band] + beta
             
     # return the data_array
-    raise NotImplementedError
+    return brightened_data
 
 
 def gammacorr(data_array: xr.DataArray, gamma: float = 2) -> xr.DataArray:
@@ -206,15 +266,21 @@ def gammacorr(data_array: xr.DataArray, gamma: float = 2) -> xr.DataArray:
     xr.DataArray
         The gamma corrected image. The shape of the array is (date, band, height, width).
     """
+
+    gamma_data = data_array.copy(deep=True)
+
     # iterate by date
+    for date in range(data_array.shape[0]):
     
         # iterate by band
+        for band in range(data_array.shape[1]):
        
             # gamma correct the image using the formula. If you use np functions to do the math, you can replace the pixel_value
             # with the image (date, band) and it will calculate it as a matrix operation.
+            gamma_data[date, band] = data_array[date, band] ** (1 / gamma)
             
     # return the data_array
-    raise NotImplementedError
+    return gamma_data
 
 
 def convert_data_to_db(data_array: xr.DataArray) -> xr.DataArray:
@@ -249,17 +315,24 @@ def convert_data_to_db(data_array: xr.DataArray) -> xr.DataArray:
     Parameters
     ----------
     data_array : xr.DataArray
-        The data_array to be converted. The shape of the array is (date, band, height, width).
+        The data_array to be brightened. The shape of the array is (date, band, height, width).
+    gamma : float
+        The gamma parameter of the gamma correction.
     Returns
     -------
     xr.DataArray
-        The decibel formatted array. The shape of the array is (date, band, height, width).
+        The gamma corrected image. The shape of the array is (date, band, height, width).
     """
-    # convert the data_array.values to log using np.log10, using np.where. Since log 0 is undefined, we only want to
-    # apply log10 to values that are not 0
+
+    # create a new data array (db_data) with the same shape as the data_array
+    db_data = data_array.copy(deep=True)
+
+    # convert the data_array.values to log using np.log10, making sure np.where(array, np.nan, array)
+    # is used to replace any 0's with np.nan before taking the log10
+    db_data.values = np.log10(np.where(data_array.values == 0, np.nan, data_array.values))
    
     # return the data_array
-    raise NotImplementedError
+    return db_data
 
 
 def maxprojection_viirs(data_array: xr.DataArray) -> xr.DataArray:
@@ -287,29 +360,41 @@ def maxprojection_viirs(data_array: xr.DataArray) -> xr.DataArray:
     xr.DataArray
         Max projection of the VIIRS data_array. The shape of the array is (date, band, height, width)
     """
+
+
     # set the band index to 0 (VIIRS only has 1 band)
+    band = 0
    
     # set the maximum to the first image (date, band) from the data_array
-    
+    max_viirs_array = data_array[0, band].to_numpy()
 
     # iterate by date
-    
+    for date in range(1, data_array.shape[0]):
+
         # set the maximum to be the max of (maximum, current image (date, band)),
         # this can be done numerous ways, here are some suggestions:
         # https://numpy.org/doc/stable/reference/generated/numpy.maximum.html
-       
+        max_viirs_array = np.maximum(max_viirs_array, data_array[date, band].to_numpy())
+
 
     # create a new data array (max_viirs_array) with shape (1, 1, 800, 800) and the
     # relevant dims and coords. You can use np.reshape to transform the maximum (you
     # just calculated it above) to have shape (1, 1, 800, 800)
+    max_viirs_array = xr.DataArray(
+        max_viirs_array.reshape(1, 1, 800, 800),
+        dims=["date", "band", "height", "width"],
+        coords={"date": [0], "band": [0]},
+    )
     
 
     # set the attributes of the max_viirs_array. The satellite_type should be the
     # SatelliteType.VIIRS_MAX_PROJ, while the other 2 attributes can be the same as the
     # original data_array
+    max_viirs_array.attrs = data_array.attrs
+    max_viirs_array.attrs["satellite_type"] = SatelliteType.VIIRS_MAX_PROJ
    
     # return the max_viirs_array
-    raise NotImplementedError
+    return max_viirs_array
 
 
 def preprocess_sentinel1(
@@ -333,13 +418,16 @@ def preprocess_sentinel1(
         The processed sentinel1_data_array. The shape of the array is (date, band, height, width).
     """
     # convert data to db
+    db_data = convert_data_to_db(sentinel1_data_array)
    
     # quantile clip (make sure to pass the parameter)
+    quantile_clip_data = quantile_clip(db_data, clip_quantile)
     
     # apply a gaussian_filter (make sure to pass the parameter)
+    gaussian_filtered_data = gaussian_filter(quantile_clip_data, sigma)
     
     # minmax and return
-    raise NotImplementedError
+    return minmax_scale(gaussian_filtered_data)
 
 
 def preprocess_sentinel2(
@@ -362,11 +450,13 @@ def preprocess_sentinel2(
         The processed sentinel2_data_array. The shape of the array is (date, band, height, width).
     """
     # quantile clip (make sure to pass the parameter)
+    quantile_clip_data = quantile_clip(sentinel2_data_array, clip_quantile)
     
     # gamma correct (make sure to pass the parameter)
+    gamma_corrected_data = gammacorr(quantile_clip_data, gamma)
   
     # minmax and return
-    raise NotImplementedError
+    return minmax_scale(gamma_corrected_data)
 
 
 def preprocess_landsat(
@@ -389,11 +479,13 @@ def preprocess_landsat(
         The processed landsat_data_array. The shape of the array is (date, band, height, width).
     """
     # quantile clip (make sure to pass the parameter)
+    quantile_clip_data = quantile_clip(landsat_data_array, clip_quantile)
     
     # gamma correct (make sure to pass the parameter)
+    gamma_corrected_data = gammacorr(quantile_clip_data, gamma)
     
     # minmax and return
-    raise NotImplementedError
+    return minmax_scale(gamma_corrected_data)
 
 
 def preprocess_viirs(
@@ -415,6 +507,35 @@ def preprocess_viirs(
         The processed viirs_data_array. The shape of the array is (date, band, height, width).
     """
     # quantile clip (make sure to pass the parameter)
+    quantile_clip_data = quantile_clip(viirs_data_array, clip_quantile)
     
     # minmax and return
-    raise NotImplementedError
+    return minmax_scale(quantile_clip_data)
+
+
+if __name__ == "__main__":
+    
+
+    # test minmax_scale
+
+    blank_data_array = xr.DataArray(
+        data=np.ones(shape=(2, 2, 5, 5)),
+        dims=("date", "band", "height", "width"),
+        coords={
+            "date": 4,
+            "band": 3,
+            "height": 800,
+            "width": 800,
+        },
+    )
+    blank_data_array.attrs["satellite_type"] = SatelliteType.LANDSAT
+    blank_data_array.attrs["tile_dir"] = "tile_1"
+    blank_data_array.attrs["parent_tile_id"] = "tile_1"
+
+    blank_data_array.values = np.zeros(
+            blank_data_array.shape
+        ) + np.multiply(np.random.rand(*blank_data_array.shape), 10)
+    
+    data_array = minmax_scale(blank_data_array, group_by_time=True)
+
+    print(data_array)

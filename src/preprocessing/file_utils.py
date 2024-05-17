@@ -44,7 +44,21 @@ def process_viirs_filename(file_path: Path) -> Tuple[str, str]:
     Tuple[str, str]
         A tuple containing the date and band.
     """
-    raise NotImplementedError
+
+    sat_pattern = get_filename_pattern(SatelliteType.VIIRS)
+
+    # assert that the file_path is viirs
+    assert file_path.name.startswith(sat_pattern) and file_path.suffix == ".tif", "Invalid VIIRS file"
+    
+    # get the filename
+    filename = file_path.name
+
+    # get the date using the datetime.strptime function
+    date = datetime.strptime(filename, f"{sat_pattern}A%Y%j.tif").date()
+    # convert the date to a string
+    date_str = date.strftime("%Y-%m-%d")
+
+    return date_str, "0"
 
 
 def process_s1_filename(file_path: Path) -> Tuple[str, str]:
@@ -70,7 +84,27 @@ def process_s1_filename(file_path: Path) -> Tuple[str, str]:
     Tuple[str, str]
         A tuple containing the date and band.
     """
-    raise NotImplementedError
+    
+    sat_pattern = get_filename_pattern(SatelliteType.S1)
+
+    # assert that the file_path is sentinel 1
+    assert file_path.name.startswith(sat_pattern) and file_path.suffix == ".tif", "Invalid Sentinel-1 file"
+    
+    # get the filename
+    filename = file_path.name
+
+    # get the date using the datetime.strptime function
+    file_name_without_sat_pattern = filename.replace(sat_pattern, "")
+    file_name_split = file_name_without_sat_pattern.split("_")
+    date = datetime.strptime(file_name_split[0], "%Y%m%d").date()
+    # convert the date to a string
+    date_str = date.strftime("%Y-%m-%d")
+
+    # get the band
+    band = file_name_split[1].split(".")[0]
+
+    return date_str, band
+    
 
 
 def process_s2_filename(file_path: Path) -> Tuple[str, str]:
@@ -95,7 +129,26 @@ def process_s2_filename(file_path: Path) -> Tuple[str, str]:
     -------
     Tuple[str, str]
     """
-    raise NotImplementedError
+    
+    sat_pattern = get_filename_pattern(SatelliteType.S2)
+
+    # assert that the file_path is sentinel 2
+    assert file_path.name.startswith(sat_pattern) and file_path.suffix == ".tif", "Invalid Sentinel-2 file"
+    
+    # get the filename
+    filename = file_path.name
+
+    # get the date using the datetime.strptime function
+    file_name_without_sat_pattern = filename.replace(sat_pattern, "")
+    file_name_split = file_name_without_sat_pattern.split("_")
+    date = datetime.strptime(file_name_split[0], "%Y%m%d").date()
+    # convert the date to a string
+    date_str = date.strftime("%Y-%m-%d")
+
+    # get the band
+    band = file_name_split[1].split(".")[0][1:]
+
+    return date_str, band
 
 
 def process_landsat_filename(file_path: Path) -> Tuple[str, str]:
@@ -121,7 +174,26 @@ def process_landsat_filename(file_path: Path) -> Tuple[str, str]:
     Tuple[str, str]
         A tuple containing the date and band.
     """
-    raise NotImplementedError
+    
+    sat_pattern = get_filename_pattern(SatelliteType.LANDSAT)
+
+    # assert that the file_path is landsat
+    assert file_path.name.startswith(sat_pattern) and file_path.suffix == ".tif", "Invalid Landsat file"
+    
+    # get the filename
+    filename = file_path.name
+
+    # get the date using the datetime.strptime function
+    file_name_without_sat_pattern = filename.replace(sat_pattern, "")
+    file_name_split = file_name_without_sat_pattern.split("_")
+    date = datetime.strptime(file_name_split[0], "%Y-%m-%d").date()
+    # convert the date to a string
+    date_str = date.strftime("%Y-%m-%d")
+
+    # get the band
+    band = file_name_split[1].split(".")[0][1:]
+
+    return date_str, band
 
 
 def process_ground_truth_filename(file_path: Path) -> Tuple[str, str]:
@@ -146,7 +218,8 @@ def process_ground_truth_filename(file_path: Path) -> Tuple[str, str]:
     Tuple[str, str]
         A tuple containing the date and band.
     """
-    raise NotImplementedError
+
+    return "0001-01-01", "0"
 
 
 def get_filename_pattern(satellite_type: SatelliteType) -> str:
@@ -172,7 +245,7 @@ def get_filename_pattern(satellite_type: SatelliteType) -> str:
         "gt": "groundTruth.tif",
     }
     # --- start here ---
-    raise NotImplementedError
+    return patterns[satellite_type.value]
 
 
 def get_satellite_files(tile_dir: Path, satellite_type: SatelliteType) -> List[Path]:
@@ -196,7 +269,15 @@ def get_satellite_files(tile_dir: Path, satellite_type: SatelliteType) -> List[P
     pattern = get_filename_pattern(satellite_type)
     # --- start here ---
     # the file is valid if it has the pattern in its name, and has the .tif extension, is not a directory
-    raise NotImplementedError
+    
+    # return a list of all the files in the tile_dir that are valid
+    if satellite_type == SatelliteType.GT:
+        all_matches = tile_dir.glob(f'{pattern}')
+    else:
+        all_matches = tile_dir.glob(f'{pattern}*.tif')
+
+    return [match for match in all_matches if match.is_file()]
+    
 
 
 def get_grouping_function(satellite_type: SatelliteType) -> Callable:
@@ -223,7 +304,8 @@ def get_grouping_function(satellite_type: SatelliteType) -> Callable:
         "gt": process_ground_truth_filename,
     }
     # --- start here ---
-    raise NotImplementedError
+    
+    return patterns[satellite_type.value]
 
 
 def get_unique_dates_and_bands(
@@ -254,7 +336,22 @@ def get_unique_dates_and_bands(
         tile_dir, satellite_type
     ), get_grouping_function(satellite_type)
     # --- start here ---
-    raise NotImplementedError
+    
+    # create empty sets for the dates and bands
+    dates_set, bands_set = set(), set()
+
+    # iterate over the satellite_files
+    for file in satellite_files:
+        # get the date and band using the grouping function
+        date, band = grouping_function(file)
+        # add the date and band to their respective sets
+        dates_set.add(date)
+        bands_set.add(band)
+    
+    # sort the sets and convert them to lists
+    dates_list, bands_list = sorted(list(dates_set)), sorted(list(bands_set))
+
+    return dates_list, bands_list
 
 
 def get_parent_tile_id(tile_dir: Path) -> str:
@@ -271,7 +368,8 @@ def get_parent_tile_id(tile_dir: Path) -> str:
     str
         The parent_tile_id of the path
     """
-    raise NotImplementedError
+    
+    return tile_dir.name
 
 
 def read_satellite_file(satellite_file: Path) -> np.ndarray:
@@ -292,7 +390,14 @@ def read_satellite_file(satellite_file: Path) -> np.ndarray:
     2 dimensional np.ndarray of shape (height, width)
 
     """
-    raise NotImplementedError
+    
+    # read the file using tifffile.imread
+    img = tifffile.imread(satellite_file)
+
+    # convert the image to a numpy array with dtype=np.float32
+    as_np = np.array(img, dtype=np.float32)
+
+    return as_np
 
 
 def load_satellite(tile_dir: Path, satellite_type: SatelliteType) -> xr.DataArray:
@@ -325,29 +430,41 @@ def load_satellite(tile_dir: Path, satellite_type: SatelliteType) -> xr.DataArra
     # get the unique dates and bands from the tile_dir
     dates, bands = get_unique_dates_and_bands(tile_dir, satellite_type)
 
+
     # --- start here ---
     # create an empty list to store the data along the date dimension
+    date_dimension_list = []
    
     # iterate over the dates
+    for date in dates:
   
         # create an empty list to store the data along the band dimension
+        band_dimension_list = []
         
         # iterate over the bands
+        for band in bands:
         
             # iterate over the files in file_names
+            for file in file_names:
             
                 # get the date of the file and the band of the file using the grouping function
+                file_date, file_band = grouping_function(file)
                 
                 # compare the current date and band from iteration with the date and band from the grouping_function,
                 # if the dates and bands match, we have the right file
+                if date == file_date and band == file_band:
                 
                     # read it using read_satellite_file and append it to the band dimension list
+                    band_dimension_list.append(read_satellite_file(file))
                     
                     # break
+                    break
                     
         # np.stack the band dimension list and append it to the date dimension list
+        date_dimension_list.append(np.stack(band_dimension_list))
         
     # np.stack the date dimension list to create a 4D array with dimensions (date, band, height, width)
+    data_array = np.stack(date_dimension_list)
     
 
     # An xarray is a wrapper for the np.ndarray, allowing us to store data about data
@@ -392,7 +509,22 @@ def load_satellite(tile_dir: Path, satellite_type: SatelliteType) -> xr.DataArra
     
 
     # add the satellite_type, tile_dir, and parent_tile_id as attributes to the xarray
-    raise NotImplementedError
+    
+    x_data_array = xr.DataArray(
+        data_array,
+        dims=("date", "band", "height", "width"),
+        coords={
+            "date": dates,
+            "band": bands,
+            "height": range(data_array.shape[-2]),
+            "width": range(data_array.shape[-1]),
+        },
+    )
+    x_data_array.attrs["satellite_type"] = satellite_type.value
+    x_data_array.attrs["tile_dir"] = str(tile_dir)
+    x_data_array.attrs["parent_tile_id"] = parent_tile_id
+
+    return x_data_array
 
 def load_satellite_list(
     tile_dir: Path, satellite_type_list: List[SatelliteType]
@@ -413,7 +545,11 @@ def load_satellite_list(
     List[xr.DataArray]
         List of data arrays for each SatelliteType in the satellite type list.
     """
-    raise NotImplementedError
+    
+    return [
+        load_satellite(tile_dir, satellite_type)
+        for satellite_type in satellite_type_list
+    ]
 
 
 # given
@@ -499,15 +635,32 @@ def create_satellite_dataset_list(
 
     # --- start here ---
     # create a list to store the data sets
+    data_set_list = []
     
     # iterate through an enumeration over the data_dict_list
     # you should have an index and a data_dict in the for loop
+    for index, data_dict in enumerate(data_dict_list):
     
         # create the xr.Dataset and pass the data_dict
+        data_set = xr.Dataset(data_dict)
         
         # set the dataset attribute "satellite_type" to be the value of the satellite_type_list[index]
+        data_set.attrs["satellite_type"] = satellite_type_list[index].value
         
         # append the dataset to the data list
+        data_set_list.append(data_set)
         
     # return the data_set_list
-    raise NotImplementedError
+    return data_set_list
+
+
+
+if __name__ == "__main__":
+    # test the functions here
+    
+    root_data_path = Path("/Users/joshcordero/Code/School/cs175/homework/hw1-exploratory-data-analysis-joshc321/data")
+
+    # test get_filename_pattern
+    print(get_satellite_files(root_data_path / "raw" / "Train" / "Tile1", SatelliteType.GT))
+
+    
