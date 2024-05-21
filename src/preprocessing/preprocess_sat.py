@@ -391,7 +391,7 @@ def maxprojection_viirs(data_array: xr.DataArray) -> xr.DataArray:
     # SatelliteType.VIIRS_MAX_PROJ, while the other 2 attributes can be the same as the
     # original data_array
     max_viirs_array.attrs = data_array.attrs
-    max_viirs_array.attrs["satellite_type"] = SatelliteType.VIIRS_MAX_PROJ
+    max_viirs_array.attrs["satellite_type"] = SatelliteType.VIIRS_MAX_PROJ.value
    
     # return the max_viirs_array
     return max_viirs_array
@@ -528,7 +528,7 @@ if __name__ == "__main__":
             "width": 800,
         },
     )
-    blank_data_array.attrs["satellite_type"] = SatelliteType.LANDSAT
+    blank_data_array.attrs["satellite_type"] = SatelliteType.LANDSAT.value
     blank_data_array.attrs["tile_dir"] = "tile_1"
     blank_data_array.attrs["parent_tile_id"] = "tile_1"
 
