@@ -173,7 +173,7 @@ class ESDDataModule(pl.LightningDataModule):
         if not self.processed_dir.exists() or len(list(self.processed_dir.glob("*"))) == 0:
 
             # get the a list of the tile directories from the raw directory (use .glob() for simplicity)
-            tile_dirs = list(self.raw_dir.glob("*"))
+            tile_dirs = list(f for f in self.raw_dir.glob("Tile*") if f.is_dir())
 
             # call the train_test_split function.
             # The arrays will be the above list, the test_size will be 1 - train size, and the random_state will be the seed.
