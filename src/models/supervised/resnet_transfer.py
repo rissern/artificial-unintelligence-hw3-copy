@@ -31,16 +31,23 @@ class FCNResnetTransfer(nn.Module):
         super().__init__()
 
         # save in_channels and out_channels to self
+        self.input_channels = in_channels
+        self.output_channels = out_channels
         
         # use torch.hub to load 'pytorch/vision', 'fcn_resnet101', make sure to use pretrained=True
         # save it to self.model
+
+        # !DEPRECIATED pretrained=True is depreciated, we will use weights='FCN_ResNet101_Weights.DEFAULT' instead
+        self.model = torch.hub.load('pytorch/vision', 'fcn_resnet101', weights='FCN_ResNet101_Weights.DEFAULT', **kwargs)
         
         # change self.model.backbone.conv1 to use in_channels as input
+        self.model.backbone.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
         
         # change self.model.classifier[-1] to use out_channels as output
+        self.model.classifier[-1] = nn.Conv2d(in_channels=512, out_channels=out_channels, kernel_size=(1, 1), stride=(1, 1))
         
         # create a final pooling layer that's a maxpool2d, of kernel size scale_factor
-        raise NotImplementedError
+        self.pool = nn.AvgPool2d(kernel_size=scale_factor)
         
     def forward(self, x):
         """
@@ -57,6 +64,19 @@ class FCNResnetTransfer(nn.Module):
             (batch, self.output_channels, width//self.scale_factor, height//self.scale_factor)
         """
         # run x through self.model
+        model_output = self.model(x)
         
         # pool the model_output's "out" value
-        raise NotImplementedError
+        pred_y = self.pool(model_output['out'])
+        
+        return pred_y
+    
+
+if __name__ == '__main__':
+    # test the model with a random input
+
+    model = FCNResnetTransfer(3, 21)
+    x = torch.randn((1, 3, 800, 800))
+    y = model(x)
+    print(y)
+    print(y.shape)
