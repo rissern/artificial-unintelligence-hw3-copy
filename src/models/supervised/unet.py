@@ -15,37 +15,37 @@ class DoubleConvHelper(nn.Module):
         """
 
         # if no mid_channels are specified, set mid_channels as out_channels
-
+        if not mid_channels:
+            mid_channels = out_channels
         # create a convolution from in_channels to mid_channels
-        
+        self.conv1 = nn.Conv2d(in_channels, mid_channels, 2)
         # create a batch_norm2d of size mid_channels
-        
+        self.batch_norm_1 = nn.batch_norm2d(mid_channels)
         # create a relu
-        
+        self.relu = relu(inplace=False)
         # create a convolution from mid_channels to out_channels
-        
+        self.conv2 = nn.Conv2d(mid_channels, out_channels, 2)
         # create a batch_norm2d of size out_channels
+        self.batch_norm_2 = nn.batch_norm2d(out_channels)
         
-        
-        raise NotImplementedError
 
 
     def forward(self, x):
         """Forward pass through the layers of the helper block"""
         # conv1
-        
+        x = self.conv1(x)
         # batch_norm1
-        
+        x = self.batch_norm_1(x)
         # relu
-        
+        x = self.relu(x)
         # conv2
-        
+        x = self.conv2(x)
         # batch_norm2
-        
+        x = self.batch_norm_2(x)
         # relu
-        
+        x = self.relu(x)
 
-        raise NotImplementedError
+        return x
 
 
 class Encoder(nn.Module):
@@ -53,16 +53,16 @@ class Encoder(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         # create a maxpool2d of kernel_size 2 and padding = 0
-        
+        self.maxpool2d = nn.MaxPool2d(2, padding=0)
         # create a doubleconvhelper
-        
+        self.doubleconv = DoubleConvHelper(in_channels, out_channels)
 
     def forward(self, x):
         # maxpool2d
-        
+        x = self.maxpool2d(x)
         # doubleconv
-        
-        raise NotImplementedError
+        x = self.doubleconv(x)
+        return x
 
 # given
 class Decoder(nn.Module):
@@ -70,28 +70,30 @@ class Decoder(nn.Module):
         super().__init__()
 
         # create up convolution using convtranspose2d from in_channels to in_channels//2
+        self.conv = nn.ConvTranspose2d(in_channels, in_channels//2, 2)
         # use a doubleconvhelper from in_channels to out_channels
-
-        raise NotImplementedError
+        self.doubleconv = DoubleConvHelper(in_channels, out_channels)
+        
 
     def forward(self, x1, x2):
         # step 1 x1 is passed through the convtranspose2d
-
+        x1 = self.conv(x1)
         # step 2 The difference between x1 and x2 is calculated to account for differences in padding
-
+        # Check
+        difference = x2-x1
         # step 3 x1 is padded (or not padded) accordingly
-
+        x1 = pad(x1, difference)
         # if you have padding issues, see
         # https://github.com/HaiyongJiang/U-Net-Pytorch-Unstructured-Buggy/commit/0e854509c2cea854e247a9c615f175f76fbb2e3a
         # https://github.com/xiaopeng-liao/Pytorch-UNet/commit/8ebac70e633bac59fc22bb5195e513d5832fb3bd
         # step 4 & 5
         # x2 represents the skip connection
         # Concatenate x1 and x2 together with torch.cat
-
+        merge = torch.cat((x1, x2))
         # step 6 Pass the concatenated tensor through a doubleconvhelper
-
+        result = self.doubleconv(merge)
         # step 7 Return output 
-        raise NotImplementedError
+        return result
     
 class OutConv(nn.Module):
     """ OutConv is the replacement of the final layer to ensure
@@ -101,12 +103,13 @@ class OutConv(nn.Module):
     def __init__(self, in_channels, out_channels):
         
         # create a convolution with in_channels = in_channels and out_channels = out_channels
-        raise NotImplementedError
+        self.conv = nn.Conv2d(in_channels, out_channels, 2)
 
     def forward(self, x):
         # evaluate x with the convolution
-        
-        raise NotImplementedError
+        # Unsure if this is correct
+        x = self.conv(x)
+        return x
     
 class UNet(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, n_encoders: int = 2,
