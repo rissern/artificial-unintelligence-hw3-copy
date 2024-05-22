@@ -119,6 +119,54 @@ def restitch_eval(
         predictions_subtile.append(np.concatenate(predictions_subtile_row, axis=-1))
     return subtile, np.concatenate(predictions_subtile, axis=-2)
 
+# TO
+def restitch_eval_csv(
+    processed_dir: Path, parent_tile_id: str, accelerator: str, datamodule, model
+) -> np.ndarray:
+    """ """
+    slice_size = datamodule.slice_size
+    subtile = Subtile(
+        satellite_list=[],
+        ground_truth=[],
+        slice_size=slice_size,
+        parent_tile_id=parent_tile_id,
+    )
+    subtile.restitch(processed_dir, datamodule.satellite_type_list)
+
+    predictions_subtile = []
+    for i in range(slice_size[0]):
+        predictions_subtile_row = []
+        for j in range(slice_size[1]):
+            X, _ = retrieve_subtile_file_csv(
+                i, j, processed_dir, parent_tile_id, datamodule
+            )
+            # You need to add a dimension of size 1 at dim 0 so that
+            # some CNN layers work
+            # i.e., (batch_size, channels, width, height) with batch_size = 1
+            X = X.reshape((1, X.shape[-3], X.shape[-2], X.shape[-1]))
+
+            predictions = None
+            if accelerator == "cpu":
+                predictions = model(X.float())
+            elif accelerator == "gpu":
+                predictions = model(X.float().cuda())
+            assert (
+                predictions != None
+            ), "accelerator passing not configured for restich_eval"
+
+            predictions = predictions.detach().cpu().numpy()
+
+            predictions_subtile_row.append(predictions)
+        predictions_subtile.append(np.concatenate(predictions_subtile_row, axis=-1))
+    return subtile, np.concatenate(predictions_subtile, axis=-2)
+
+def retrieve_subtile_file_csv(
+    i: int, j: int, processed_dir: str, parent_tile_id: str, datamodule
+):
+    subtile_file = processed_dir / "subtiles" / parent_tile_id / f"{i}_{j}" 
+    index = datamodule.test_dataset.subtile_dirs.index(subtile_file)
+    X, y = datamodule.test_dataset[index]
+    return X, y
 
 def retrieve_subtile_file(
     i: int, j: int, processed_dir: str, parent_tile_id: str, datamodule
