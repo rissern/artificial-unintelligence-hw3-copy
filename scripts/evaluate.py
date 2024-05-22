@@ -11,18 +11,45 @@ from src.visualization.restitch_plot import restitch_and_plot
 
 def main(options):
     # initialize datamodule
+    dataModule = ESDDataModule(
+        processed_dir=options.processed_dir,
+        raw_dir=options.raw_dir,
+        batch_size=options.batch_size,
+        seed=options.seed,
+        selected_bands=options.selected_bands,
+        slice_size=options.slice_size,
+    )
 
     # prepare data
+    dataModule.prepare_data()
 
     # load model from checkpoint
     # set model to eval mode
+    model = ESDSegmentation.load_from_checkpoint(
+        options.model_path
+    )
+    model.eval()
 
     # get a list of all processed tiles
+    all_processed_tiles = [
+        tile.name for tile in (Path(options.processed_dir) / "Val" / "subtiles").iterdir() if tile.is_dir()
+    ]
     
     # for each tile
+    for tile in all_processed_tiles:
         # run restitch and plot
+        restitch_and_plot(
+            options,
+            datamodule=dataModule,
+            model=model,
+            parent_tile_id=tile,
+            accelerator=options.accelerator,
+            satellite_type=dataModule.satellite_type_list,
+            selected_bands=options.selected_bands,
+            results_dir=options.results_dir,
+        )
 
-    return NotImplementedError
+    
 
 
 if __name__ == "__main__":
