@@ -150,7 +150,7 @@ class UNet(nn.Module):
         self.embedding_size = embedding_size
 
         # create a doubleconvhelper
-        self.doubleconvhelper = DoubleConvHelper(in_channels, out_channels)
+        self.doubleconvhelper = DoubleConvHelper(in_channels, self.embedding_size)
         
         self.encoders = nn.ModuleList()
         # for each encoder (there's n_encoders encoders)
