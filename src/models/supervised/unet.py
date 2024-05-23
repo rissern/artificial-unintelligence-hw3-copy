@@ -18,13 +18,13 @@ class DoubleConvHelper(nn.Module):
         if not mid_channels:
             mid_channels = out_channels
         # create a convolution from in_channels to mid_channels
-        self.conv1 = nn.Conv2d(in_channels, mid_channels, 2)
+        self.conv1 = nn.Conv2d(in_channels, mid_channels, 2, padding=1)
         # create a batch_norm2d of size mid_channels
         self.batch_norm_1 = nn.BatchNorm2d(mid_channels)
         # create a relu
         self.relu = relu
         # create a convolution from mid_channels to out_channels
-        self.conv2 = nn.Conv2d(mid_channels, out_channels, 2)
+        self.conv2 = nn.Conv2d(mid_channels, out_channels, 2, padding=1)
         # create a batch_norm2d of size out_channels
         self.batch_norm_2 = nn.BatchNorm2d(out_channels)
         
@@ -80,16 +80,21 @@ class Decoder(nn.Module):
         x1 = self.conv(x1)
         # step 2 The difference between x1 and x2 is calculated to account for differences in padding
         # Check
-        difference = x2-x1
-        # step 3 x1 is padded (or not padded) accordingly
-        x1 = pad(x1, difference)
+    
+        diffX = x2.size()[2] - x1.size()[2]
+        diffY = x2.size()[3] - x1.size()[3]
+        #print('sizes',x1.size(),x2.size(),diffX // 2, diffX - diffX//2, diffY // 2, diffY - diffY//2)
+        x1 = pad(x1, (diffX // 2, diffX - diffX//2,
+                        diffY // 2, diffY - diffY//2))
+        merge = torch.cat([x2, x1], dim=1)
+       
         # if you have padding issues, see
         # https://github.com/HaiyongJiang/U-Net-Pytorch-Unstructured-Buggy/commit/0e854509c2cea854e247a9c615f175f76fbb2e3a
         # https://github.com/xiaopeng-liao/Pytorch-UNet/commit/8ebac70e633bac59fc22bb5195e513d5832fb3bd
         # step 4 & 5
         # x2 represents the skip connection
         # Concatenate x1 and x2 together with torch.cat
-        merge = torch.cat((x1, x2))
+        # merge = torch.cat((x1, x2))
         # step 6 Pass the concatenated tensor through a doubleconvhelper
         result = self.doubleconv(merge)
         # step 7 Return output 
@@ -207,13 +212,16 @@ class UNet(nn.Module):
             # run the residual through the encoder, append the output to the residual
             residuals.append(encoder(residuals[-1]))
 
+        # for r in residuals:
+        #     print("residuals", r.shape)
         # set x to be the last value from the residuals
         x = residuals[-1]
         
         # for each residual except the last one
         for i in range(len(residuals)-1):
             # evaluate it with the decoder
-            x = self.decoders[i](residuals[i])
+            # print("Concat", x.shape, residuals[len(residuals)-2-i].shape)
+            x = self.decoders[i](x, residuals[len(residuals)-2-i])
         
         # evaluate the final pooling layer
         self.pool(x)
