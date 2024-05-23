@@ -142,39 +142,44 @@ class UNet(nn.Module):
         super(UNet, self).__init__()
 
         # save in_channels, out_channels, n_encoders, embedding_size to self
-        
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.n_encoders = n_encoders
+        self.embedding_size = embedding_size
 
         # create a doubleconvhelper
+        self.doubleconvhelper = DoubleConvHelper(in_channels, out_channels)
         
-
+        self.encoders = nn.ModuleList()
         # for each encoder (there's n_encoders encoders)
-        
+        for _ in self.n_encoders:
             # append a new encoder with embedding_size as input and 2*embedding_size as output
-            
+            self.encoders.append(Encoder(self.embedding_size, self.embedding_size*2))
             # double the size of embedding_size
-            
+            self.embedding_size *= 2
         
         # store it in self.encoders as an nn.ModuleList
         
-
+        self.decoders = nn.Modulelist()
         # for each decoder (there's n_encoders decoders)
-        
+        for i, _ in enumerate(self.n_encoders):
         
             # if it's the last decoder
-            
+            if i == len(self.n_encoders-1):
                 # create a decoder of embedding_size input and out_channels output
-                
-            
+                self.decoders.append(Decoder(self.embedding_size, out_channels))
+            else:
                 # create a decoder of embeding_size input and embedding_size//2 output
-                
+                self.decoders.append(Decoder(self.embedding_size, self.embedding_size//2))
             # halve the embedding size
-            
+            self.embedding_size = self.embedding_size // 2
         
         # save the decoder list as an nn.ModuleList to self.decoders
         
 
         # create a MaxPool2d of kernel size scale_factor as the final pooling layer
-        raise NotImplementedError
+        self.pool = nn.MaxPool2d(scale_factor)
+        
 
     def forward(self, x):
         """
@@ -192,23 +197,24 @@ class UNet(nn.Module):
             as the residual.
         """
         # evaluate x with self.inc
-        
+        x = self.doubleconvhelper(x)
         # create a list of the residuals, with its only element being x
-        
+        residuals = [x]
         # for each encoder
-        
+        for encoder in self.encoders:
             # run the residual through the encoder, append the output to the residual
-            
+            residuals.append(encoder(residuals[-1]))
 
         # set x to be the last value from the residuals
+        x = residuals[-1]
         
         # for each residual except the last one
-        
+        for i in range(len(residuals)-1):
             # evaluate it with the decoder
-            
+            x = self.decoders[i](residuals[i])
         
         # evaluate the final pooling layer
-        
+        self.pool(x)
 
-        # return x
-        raise NotImplementedError
+        return x
+        
