@@ -153,6 +153,7 @@ class UNet(nn.Module):
         self.out_channels = out_channels
         self.n_encoders = n_encoders
         self.embedding_size = embedding_size
+        self.scale_factor = scale_factor
 
         # create a doubleconvhelper
         self.doubleconvhelper = DoubleConvHelper(in_channels, self.embedding_size)
@@ -204,6 +205,7 @@ class UNet(nn.Module):
             as the residual.
         """
         # evaluate x with self.inc
+        print(self.in_channels, self.out_channels, self.n_encoders, self.embedding_size, self.scale_factor)
         x = self.doubleconvhelper(x)
         # create a list of the residuals, with its only element being x
         residuals = [x]
@@ -212,8 +214,8 @@ class UNet(nn.Module):
             # run the residual through the encoder, append the output to the residual
             residuals.append(encoder(residuals[-1]))
 
-        # for r in residuals:
-        #     print("residuals", r.shape)
+        for r in residuals:
+            print("residuals", r.shape)
         # set x to be the last value from the residuals
         x = residuals[-1]
         
@@ -222,7 +224,7 @@ class UNet(nn.Module):
             # evaluate it with the decoder
             # print("Concat", x.shape, residuals[len(residuals)-2-i].shape, self.decoders[i].in_channels)
             x = self.decoders[i](x, residuals[len(residuals)-2-i])
-            # print("finished", x.shape)
+            print("finished", x.shape)
         
         # evaluate the final pooling layer
         self.pool(x)
