@@ -44,10 +44,16 @@ class ESDSegmentation(pl.LightningModule):
 
             # initialize the accuracy metrics for the semantic segmentation task
         self.train_accuracy_metrics = torchmetrics.Accuracy(
-            num_classes=out_channels, average="macro", multidim_average="samplewise"
+            task="multiclass",
+            num_classes=out_channels,
+            average="macro",
+            multidim_average="samplewise",
         )  # not sure the parameters are correct
         self.eval_accuracy_metrics = torchmetrics.Accuracy(
-            num_classes=out_channels, average="macro", multidim_average="samplewise"
+            task="multiclass",
+            num_classes=out_channels,
+            average="macro",
+            multidim_average="samplewise",
         )  # not sure the parameters are correct
 
     def forward(self, X):
@@ -65,7 +71,7 @@ class ESDSegmentation(pl.LightningModule):
         loss = nn.CrossEntropyLoss()(eval, mask)
 
         # return loss
-        self.log(f"train_loss_{batch_idx}: {loss}")
+        self.log(f"train_loss_{batch_idx}: ", loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -82,7 +88,7 @@ class ESDSegmentation(pl.LightningModule):
         # evaluate each accuracy metric and log it in wandb
 
         self.eval_accuracy_metrics(eval, mask)
-        self.log(f"eval_loss_{batch_idx}: {loss}")
+        self.log(f"eval_loss_{batch_idx}: ", loss)
         self.log("eval_accuracy", self.eval_accuracy_metrics, on_epoch=True)
 
         # return validation loss
