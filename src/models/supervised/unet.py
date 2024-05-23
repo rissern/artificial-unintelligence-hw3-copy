@@ -13,20 +13,20 @@ class DoubleConvHelper(nn.Module):
             - another convolution
             - another batch norm
         """
-
+        super().__init__()
         # if no mid_channels are specified, set mid_channels as out_channels
         if not mid_channels:
             mid_channels = out_channels
         # create a convolution from in_channels to mid_channels
         self.conv1 = nn.Conv2d(in_channels, mid_channels, 2)
         # create a batch_norm2d of size mid_channels
-        self.batch_norm_1 = nn.batch_norm2d(mid_channels)
+        self.batch_norm_1 = nn.BatchNorm2d(mid_channels)
         # create a relu
-        self.relu = relu(inplace=False)
+        self.relu = relu
         # create a convolution from mid_channels to out_channels
         self.conv2 = nn.Conv2d(mid_channels, out_channels, 2)
         # create a batch_norm2d of size out_channels
-        self.batch_norm_2 = nn.batch_norm2d(out_channels)
+        self.batch_norm_2 = nn.BatchNorm2d(out_channels)
         
 
 
@@ -101,7 +101,9 @@ class OutConv(nn.Module):
     classes for the classification task.
     """
     def __init__(self, in_channels, out_channels):
-        
+        # added
+        super().__init__()
+
         # create a convolution with in_channels = in_channels and out_channels = out_channels
         self.conv = nn.Conv2d(in_channels, out_channels, 2)
 
@@ -152,7 +154,7 @@ class UNet(nn.Module):
         
         self.encoders = nn.ModuleList()
         # for each encoder (there's n_encoders encoders)
-        for _ in self.n_encoders:
+        for _ in range(self.n_encoders):
             # append a new encoder with embedding_size as input and 2*embedding_size as output
             self.encoders.append(Encoder(self.embedding_size, self.embedding_size*2))
             # double the size of embedding_size
@@ -160,12 +162,12 @@ class UNet(nn.Module):
         
         # store it in self.encoders as an nn.ModuleList
         
-        self.decoders = nn.Modulelist()
+        self.decoders = nn.ModuleList()
         # for each decoder (there's n_encoders decoders)
-        for i, _ in enumerate(self.n_encoders):
+        for i, _ in enumerate(range(self.n_encoders)):
         
             # if it's the last decoder
-            if i == len(self.n_encoders-1):
+            if i == self.n_encoders-1:
                 # create a decoder of embedding_size input and out_channels output
                 self.decoders.append(Decoder(self.embedding_size, out_channels))
             else:
