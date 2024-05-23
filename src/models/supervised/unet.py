@@ -68,9 +68,9 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
-
+        self.in_channels = in_channels
         # create up convolution using convtranspose2d from in_channels to in_channels//2
-        self.conv = nn.ConvTranspose2d(in_channels, in_channels//2, 2)
+        self.conv = nn.ConvTranspose2d(in_channels, in_channels//2, 2, stride = 2)
         # use a doubleconvhelper from in_channels to out_channels
         self.doubleconv = DoubleConvHelper(in_channels, out_channels)
         
@@ -80,7 +80,7 @@ class Decoder(nn.Module):
         x1 = self.conv(x1)
         # step 2 The difference between x1 and x2 is calculated to account for differences in padding
         # Check
-    
+        print(x1.shape, x2.shape)
         diffX = x2.size()[2] - x1.size()[2]
         diffY = x2.size()[3] - x1.size()[3]
         #print('sizes',x1.size(),x2.size(),diffX // 2, diffX - diffX//2, diffY // 2, diffY - diffY//2)
@@ -185,7 +185,7 @@ class UNet(nn.Module):
         
 
         # create a MaxPool2d of kernel size scale_factor as the final pooling layer
-        self.pool = nn.MaxPool2d(scale_factor)
+        self.pool = nn.MaxPool2d(kernel_size = (scale_factor, scale_factor))
         
 
     def forward(self, x):
@@ -220,8 +220,9 @@ class UNet(nn.Module):
         # for each residual except the last one
         for i in range(len(residuals)-1):
             # evaluate it with the decoder
-            # print("Concat", x.shape, residuals[len(residuals)-2-i].shape)
+            # print("Concat", x.shape, residuals[len(residuals)-2-i].shape, self.decoders[i].in_channels)
             x = self.decoders[i](x, residuals[len(residuals)-2-i])
+            # print("finished", x.shape)
         
         # evaluate the final pooling layer
         self.pool(x)
