@@ -206,6 +206,7 @@ class UNet(nn.Module):
         """
         # evaluate x with self.inc
         print(self.in_channels, self.out_channels, self.n_encoders, self.embedding_size, self.scale_factor)
+        print(x.shape)
         x = self.doubleconvhelper(x)
 
         # create a list of the residuals, with its only element being x
@@ -225,7 +226,7 @@ class UNet(nn.Module):
             x = self.decoders[i](x, residuals[len(residuals)-2-i])
         
         # evaluate the final pooling layer
-        # x = self.pool(x)
+        x = self.pool(x)
 
         return x
         
