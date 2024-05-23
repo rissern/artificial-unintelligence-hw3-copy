@@ -80,10 +80,8 @@ class Decoder(nn.Module):
         x1 = self.conv(x1)
         # step 2 The difference between x1 and x2 is calculated to account for differences in padding
         # Check
-        print(x1.shape, x2.shape)
         diffX = x2.size()[2] - x1.size()[2]
         diffY = x2.size()[3] - x1.size()[3]
-        #print('sizes',x1.size(),x2.size(),diffX // 2, diffX - diffX//2, diffY // 2, diffY - diffY//2)
         x1 = pad(x1, (diffX // 2, diffX - diffX//2,
                         diffY // 2, diffY - diffY//2))
         merge = torch.cat([x2, x1], dim=1)
@@ -205,8 +203,6 @@ class UNet(nn.Module):
             as the residual.
         """
         # evaluate x with self.inc
-        print(self.in_channels, self.out_channels, self.n_encoders, self.embedding_size, self.scale_factor)
-        print(x.shape)
         x = self.doubleconvhelper(x)
 
         # create a list of the residuals, with its only element being x
@@ -222,7 +218,6 @@ class UNet(nn.Module):
         # for each residual except the last one
         for i in range(len(residuals)-1):
             # evaluate it with the decoder
-            # print("Concat", x.shape, residuals[len(residuals)-2-i].shape, self.decoders[i].in_channels)
             x = self.decoders[i](x, residuals[len(residuals)-2-i])
         
         # evaluate the final pooling layer
