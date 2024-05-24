@@ -85,6 +85,7 @@ class ESDDataModule(pl.LightningDataModule):
         processed_dir: Path,
         raw_dir: Path,
         batch_size: int = 32,
+        num_workers: int = 15,
         seed: int = 12378921,
         selected_bands: Dict[SatelliteType, List[str]] = None,
         slice_size: Tuple[int, int] = (4, 4),
@@ -101,6 +102,7 @@ class ESDDataModule(pl.LightningDataModule):
         self.processed_dir = processed_dir
         self.raw_dir = raw_dir
         self.batch_size = batch_size
+        self.num_workers = num_workers
         self.seed = seed
         self.selected_bands = selected_bands
         self.slice_size = slice_size
@@ -236,18 +238,18 @@ class ESDDataModule(pl.LightningDataModule):
             self.val_dataset = ESDDataset(processed_dir=self.val_dir, transform=self.transform, satellite_type_list=self.satellite_type_list, slice_size=self.slice_size)
 
 
-    def train_dataloader(self) -> torch.utils.data.DataLoader:
+    def train_dataloader(self, num_workers=15) -> torch.utils.data.DataLoader:
         """
         Creates and returns a DataLoader with self.train_dataset
         """
         # create the torch.utils.data.Dataloader for the train_dataset, passing the batch size
         # and collate_fn
-        return torch.utils.data.DataLoader(self.train_dataset, batch_size=self.batch_size, collate_fn=collate_fn)
+        return torch.utils.data.DataLoader(self.train_dataset, batch_size=self.batch_size, collate_fn=collate_fn, num_workers=num_workers)
 
-    def val_dataloader(self) -> torch.utils.data.DataLoader:
+    def val_dataloader(self, num_workers=15) -> torch.utils.data.DataLoader:
         """
         Creates and returns a DataLoader with self.val_dataset
         """
         # create the torch.utils.data.Dataloader for the val_dataset, passing the batch size
         # and collate_fn
-        return torch.utils.data.DataLoader(self.val_dataset, batch_size=self.batch_size, collate_fn=collate_fn)
+        return torch.utils.data.DataLoader(self.val_dataset, batch_size=self.batch_size, collate_fn=collate_fn, num_workers=num_workers)
