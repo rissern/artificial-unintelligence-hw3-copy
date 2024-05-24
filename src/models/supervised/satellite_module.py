@@ -22,7 +22,7 @@ class ESDSegmentation(pl.LightningModule):
         Constructor for ESDSegmentation class.
         """
         # CALL THE CONSTRUCTOR OF THE PARENT CLASS
-        super().__init__()
+        super(ESDSegmentation, self).__init__()
 
         # use self.save_hyperparameters to ensure that the module will load
         self.save_hyperparameters()
@@ -30,14 +30,13 @@ class ESDSegmentation(pl.LightningModule):
         # store in_channels and out_channels
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.learning_rate = learning_rate
 
         # if the model type is segmentation_cnn, initalize a unet as self.model
         # if the model type is unet, initialize a unet as self.model
         # if the model type is fcn_resnet_transfer, initialize a fcn_resnet_transfer as self.model
         if model_type == "segmentation_cnn":
             self.model = SegmentationCNN(in_channels, out_channels, **model_params)
-        if model_type == "unet":
+        elif model_type == "unet":
             self.model = UNet(in_channels, out_channels, **model_params)
         elif model_type == "fcn_resnet_transfer":
             self.model = FCNResnetTransfer(in_channels, out_channels, **model_params)
