@@ -41,7 +41,7 @@ class ESDSegmentation(pl.LightningModule):
         elif model_type == "fcn_resnet_transfer":
             self.model = FCNResnetTransfer(in_channels, out_channels, **model_params)
         else:
-            print(f"model_type not found: {model_type}")
+            raise Exception(f"model_type not found: {model_type}")
 
         # initialize the accuracy metrics for the semantic segmentation task
         self.train_accuracy_metrics = torchmetrics.Accuracy(
