@@ -35,7 +35,9 @@ class ESDSegmentation(pl.LightningModule):
         # if the model type is segmentation_cnn, initalize a unet as self.model
         # if the model type is unet, initialize a unet as self.model
         # if the model type is fcn_resnet_transfer, initialize a fcn_resnet_transfer as self.model
-        if model_type == "segmentation_cnn" or model_type == "unet":
+        if model_type == "segmentation_cnn":
+            self.model = SegmentationCNN(in_channels, out_channels, **model_params)
+        if model_type == "unet":
             self.model = UNet(in_channels, out_channels, **model_params)
         elif model_type == "fcn_resnet_transfer":
             self.model = FCNResnetTransfer(in_channels, out_channels, **model_params)
