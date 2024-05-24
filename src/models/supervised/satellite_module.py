@@ -67,6 +67,7 @@ class ESDSegmentation(pl.LightningModule):
         # get sat_img and mask from batch
         sat_img, mask = batch
         sat_img = sat_img.float()
+        mask = mask.long()
 
         # evaluate batch
         eval = self(sat_img)
@@ -82,6 +83,7 @@ class ESDSegmentation(pl.LightningModule):
         # get sat_img and mask from batch
         sat_img, mask = batch
         sat_img = sat_img.float()
+        mask = mask.long()
 
         # evaluate batch for validation
         eval = self(sat_img)
@@ -91,7 +93,7 @@ class ESDSegmentation(pl.LightningModule):
         eval = torch.argmax(eval, dim=1)
 
         # evaluate each accuracy metric and log it in wandb
-        self.eval_accuracy_metrics(eval, mask)
+        self.eval_accuracy_metrics.update(eval, mask)
         self.log("eval_loss", loss)
         self.log("eval_accuracy", self.eval_accuracy_metrics, on_epoch=True)
 
