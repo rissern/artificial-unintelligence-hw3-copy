@@ -162,6 +162,9 @@ if __name__ == "__main__":
         type=int,
         default=config.kernel_size,
     )
+    parser.add_argument(
+        "--num_workers", help="Number of workers", type=int, default=config.num_workers
+    )
 
     parse_args = parser.parse_args()
 
