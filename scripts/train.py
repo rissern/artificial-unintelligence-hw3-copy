@@ -21,10 +21,10 @@ ROOT = Path.cwd()
 
 def train(options: ESDConfig):
     # initialize wandb
+    wandb.init(project=PROJ_NAME)
     # setup the wandb logger
 
     # initialize the datamodule
-    
 
     # prepare the data
 
@@ -55,7 +55,7 @@ def train(options: ESDConfig):
         RichProgressBar(),
         RichModelSummary(max_depth=3),
     ]
-    
+
     # initialize trainer, set accelerator, devices, number of nodes, logger
     # max epochs and callbacks
 
