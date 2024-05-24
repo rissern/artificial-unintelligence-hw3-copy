@@ -77,7 +77,7 @@ def train(options: ESDConfig):
     # initialize trainer, set accelerator, devices, number of nodes, logger
     # max epochs and callbacks
     trainer = pl.Trainer(
-        accelerator="auto",
+        accelerator=options.accelerator,
         devices=options.devices,
         logger=wandb_logger,
         max_epochs=options.max_epochs,

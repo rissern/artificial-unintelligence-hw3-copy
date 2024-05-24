@@ -244,12 +244,16 @@ class ESDDataModule(pl.LightningDataModule):
                 slice_size=self.slice_size,
             )
 
-    def train_dataloader(self, num_workers=0) -> torch.utils.data.DataLoader:
+    def train_dataloader(self, num_workers=None) -> torch.utils.data.DataLoader:
         """
         Creates and returns a DataLoader with self.train_dataset
         """
         # create the torch.utils.data.Dataloader for the train_dataset, passing the batch size
         # and collate_fn
+
+        if num_workers is None:
+            num_workers = self.num_workers
+
         return torch.utils.data.DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
@@ -257,12 +261,16 @@ class ESDDataModule(pl.LightningDataModule):
             num_workers=num_workers,
         )
 
-    def val_dataloader(self, num_workers=0) -> torch.utils.data.DataLoader:
+    def val_dataloader(self, num_workers=None) -> torch.utils.data.DataLoader:
         """
         Creates and returns a DataLoader with self.val_dataset
         """
         # create the torch.utils.data.Dataloader for the val_dataset, passing the batch size
         # and collate_fn
+
+        if num_workers is None:
+            num_workers = self.num_workers
+            
         return torch.utils.data.DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
