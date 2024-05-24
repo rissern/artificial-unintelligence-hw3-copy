@@ -45,12 +45,12 @@ class ESDSegmentation(pl.LightningModule):
             raise Exception(f"model_type not found: {model_type}")
 
         # initialize the accuracy metrics for the semantic segmentation task
-        self.train_accuracy_metrics = torchmetrics.Accuracy(
+        self.train_accuracy_metrics = torchmetrics.MulticlassAccuracy(
             num_classes=out_channels,
             average="macro",
             multidim_average="samplewise",
         )  # not sure the parameters are correct
-        self.eval_accuracy_metrics = torchmetrics.Accuracy(
+        self.eval_accuracy_metrics = torchmetrics.MulticlassAccuracy(
             num_classes=out_channels,
             average="macro",
             multidim_average="samplewise",
