@@ -244,7 +244,7 @@ class ESDDataModule(pl.LightningDataModule):
                 slice_size=self.slice_size,
             )
 
-    def train_dataloader(self, num_workers=15) -> torch.utils.data.DataLoader:
+    def train_dataloader(self, num_workers=0) -> torch.utils.data.DataLoader:
         """
         Creates and returns a DataLoader with self.train_dataset
         """
@@ -257,7 +257,7 @@ class ESDDataModule(pl.LightningDataModule):
             num_workers=num_workers,
         )
 
-    def val_dataloader(self, num_workers=15) -> torch.utils.data.DataLoader:
+    def val_dataloader(self, num_workers=0) -> torch.utils.data.DataLoader:
         """
         Creates and returns a DataLoader with self.val_dataset
         """
