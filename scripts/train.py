@@ -79,7 +79,6 @@ def train(options: ESDConfig):
     trainer = pl.Trainer(
         accelerator="auto",
         devices=options.devices,
-        # n_encoders=options.n_encoders,
         logger=wandb_logger,
         max_epochs=options.max_epochs,
         callbacks=callbacks,
