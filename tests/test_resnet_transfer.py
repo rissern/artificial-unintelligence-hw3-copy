@@ -26,8 +26,8 @@ class TestFCNResnetTransfer(unittest.TestCase):
     def test_init_attributes_set_correctly(self):
 
         # Check if the input_channels and output_channels are set correctly
-        self.assertEqual(self.model.input_channels, self.in_channels)
-        self.assertEqual(self.model.output_channels, self.out_channels)
+        self.assertEqual(self.model.in_channels, self.in_channels)
+        self.assertEqual(self.model.out_channels, self.out_channels)
 
         # Check if the model is loaded correctly from torch hub
         self.assertIsInstance(self.model.model, nn.Module)
