@@ -49,13 +49,13 @@ class ESDSegmentation(pl.LightningModule):
             task="multiclass",
             num_classes=out_channels,
             average="macro",
-            multidim_average="samplewise",
+            multidim_average="global",
         )  # not sure the parameters are correct
         self.eval_accuracy_metrics = torchmetrics.Accuracy(
             task="multiclass",
             num_classes=out_channels,
             average="macro",
-            multidim_average="samplewise",
+            multidim_average="global",
         )  # not sure the parameters are correct
 
     def forward(self, X):
@@ -93,9 +93,9 @@ class ESDSegmentation(pl.LightningModule):
         eval = torch.argmax(eval, dim=1)
 
         # evaluate each accuracy metric and log it in wandb
-        self.eval_accuracy_metrics.update(eval, mask)
+        acc = self.eval_accuracy_metrics(eval, mask)
         self.log("eval_loss", loss)
-        self.log("eval_accuracy", self.eval_accuracy_metrics, on_epoch=True)
+        self.log("eval_accuracy", acc, on_epoch=True)
 
         # return validation loss
         return loss
