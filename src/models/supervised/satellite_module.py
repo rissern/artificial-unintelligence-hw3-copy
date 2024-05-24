@@ -30,15 +30,16 @@ class ESDSegmentation(pl.LightningModule):
         # store in_channels and out_channels
         self.in_channels = in_channels
         self.out_channels = out_channels
+        self.learning_rate = learning_rate
 
         # if the model type is segmentation_cnn, initalize a unet as self.model
         # if the model type is unet, initialize a unet as self.model
         # if the model type is fcn_resnet_transfer, initialize a fcn_resnet_transfer as self.model
         if model_type == "SegmentationCNN":
             self.model = SegmentationCNN(in_channels, out_channels, **model_params)
-        elif model_type == "unet":
+        elif model_type == "UNet":
             self.model = UNet(in_channels, out_channels, **model_params)
-        elif model_type == "fcn_resnet_transfer":
+        elif model_type == "FCNResnetTransfer":
             self.model = FCNResnetTransfer(in_channels, out_channels, **model_params)
         else:
             raise Exception(f"model_type not found: {model_type}")
