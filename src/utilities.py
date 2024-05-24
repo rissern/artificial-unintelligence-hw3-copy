@@ -60,7 +60,7 @@ class ESDConfig:
     }
 
     accelerator: str = "cpu"
-    batch_size: int = 1
+    batch_size: int = 0
     depth: int = 2
     devices: int = 1
     embedding_size: int = 64
