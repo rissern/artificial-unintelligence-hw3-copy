@@ -85,7 +85,7 @@ class ESDDataModule(pl.LightningDataModule):
         processed_dir: Path,
         raw_dir: Path,
         batch_size: int = 1,
-        num_workers: int = 15,
+        num_workers: int = 0,
         seed: int = 12378921,
         selected_bands: Dict[SatelliteType, List[str]] = None,
         slice_size: Tuple[int, int] = (4, 4),
