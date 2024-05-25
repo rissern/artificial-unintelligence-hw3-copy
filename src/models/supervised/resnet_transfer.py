@@ -34,7 +34,7 @@ class FCNResnetTransfer(nn.Module):
         # save in_channels and out_channels to self
         self.in_channels = in_channels
         self.out_channels = out_channels
-
+        
         # use torch.hub to load 'pytorch/vision', 'fcn_resnet101', make sure to use pretrained=True
         # save it to self.model
 
@@ -47,6 +47,7 @@ class FCNResnetTransfer(nn.Module):
         )
 
         # change self.model.backbone.conv1 to use in_channels as input
+        
         self.model.backbone.conv1 = nn.Conv2d(
             in_channels=in_channels,
             out_channels=64,
