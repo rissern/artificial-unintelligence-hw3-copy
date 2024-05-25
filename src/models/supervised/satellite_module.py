@@ -49,22 +49,25 @@ class ESDSegmentation(pl.LightningModule):
             task="multiclass",
             num_classes=out_channels,
             average="macro",
-            multidim_average="samplewise",
+            multidim_average="global",
         )  # not sure the parameters are correct
         self.eval_accuracy_metrics = torchmetrics.Accuracy(
             task="multiclass",
             num_classes=out_channels,
             average="macro",
-            multidim_average="samplewise",
+            multidim_average="global",
         )  # not sure the parameters are correct
 
     def forward(self, X):
         # evaluate self.model
+        X = X.float()
         return self.model(X)
 
     def training_step(self, batch, batch_idx):
         # get sat_img and mask from batch
         sat_img, mask = batch
+        sat_img = sat_img.float()
+        mask = mask.long()
 
         # evaluate batch
         eval = self(sat_img)
@@ -73,12 +76,14 @@ class ESDSegmentation(pl.LightningModule):
         loss = nn.CrossEntropyLoss()(eval, mask)
 
         # return loss
-        self.log(f"train_loss_{batch_idx}: ", loss)
+        self.log("train_loss", loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
         # get sat_img and mask from batch
         sat_img, mask = batch
+        sat_img = sat_img.float()
+        mask = mask.long()
 
         # evaluate batch for validation
         eval = self(sat_img)
@@ -88,9 +93,9 @@ class ESDSegmentation(pl.LightningModule):
         eval = torch.argmax(eval, dim=1)
 
         # evaluate each accuracy metric and log it in wandb
-        self.eval_accuracy_metrics(eval, mask)
-        self.log(f"eval_loss_{batch_idx}: ", loss)
-        self.log("eval_accuracy", self.eval_accuracy_metrics, on_epoch=True)
+        acc = self.eval_accuracy_metrics(eval, mask)
+        self.log("eval_loss", loss)
+        self.log("eval_accuracy", acc, on_epoch=True)
 
         # return validation loss
         return loss

@@ -134,6 +134,8 @@ class ESDDataset(Dataset):
         # concatenate X
         X = np.concatenate(X, axis=0)
 
+        X = np.nan_to_num(X)
+
         # set y to be the ground truth data array .values squeezed on the 0 and 1 axis
         y = ground_truth.squeeze(0).squeeze(0)
 

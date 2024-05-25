@@ -23,15 +23,33 @@ def train(options: ESDConfig):
     # initialize wandb
     wandb.init(project=PROJ_NAME)
     # setup the wandb logger
+    wandb_logger = pl.loggers.WandbLogger(project=PROJ_NAME)
 
     # initialize the datamodule
+    dataModule = ESDDataModule(
+        processed_dir=options.processed_dir,
+        raw_dir=options.raw_dir,
+        batch_size=options.batch_size,
+        seed=options.seed,
+        selected_bands=options.selected_bands,
+        slice_size=options.slice_size,
+        num_workers=options.num_workers,
+    )
 
     # prepare the data
+    dataModule.prepare_data()
 
     # create a model params dict to initialize ESDSegmentation
     # note: different models have different parameters
+    model_param = {
+        "model_type": options.model_type,
+        "in_channels": options.in_channels,
+        "out_channels": options.out_channels,
+        "learning_rate": options.learning_rate,
+    }
 
     # initialize the ESDSegmentation model
+    ESDSegmentation_model = ESDSegmentation(**model_param)
 
     # Use the following callbacks, they're provided for you,
     # but you may change some of the settings
@@ -58,9 +76,16 @@ def train(options: ESDConfig):
 
     # initialize trainer, set accelerator, devices, number of nodes, logger
     # max epochs and callbacks
+    trainer = pl.Trainer(
+        accelerator=options.accelerator,
+        devices=options.devices,
+        logger=wandb_logger,
+        max_epochs=options.max_epochs,
+        callbacks=callbacks,
+    )
 
     # run trainer.fit
-    raise NotImplementedError
+    trainer.fit(ESDSegmentation_model, dataModule)
 
 
 if __name__ == "__main__":
@@ -135,6 +160,9 @@ if __name__ == "__main__":
         help="Kernel size of the convolutions",
         type=int,
         default=config.kernel_size,
+    )
+    parser.add_argument(
+        "--num_workers", help="Number of workers", type=int, default=config.num_workers
     )
 
     parse_args = parser.parse_args()
