@@ -1,1 +1,23 @@
-# place your sweep configurations here
+method: bayes
+metric:
+  goal: minimize
+  name: Step
+parameters:
+  in_channels:
+    distribution: int_uniform
+    max: 224
+    min: 50
+  learning_rate:
+    distribution: uniform
+    max: 0.0031609734803264744
+    min: 0.0005
+  model_type:
+    distribution: categorical
+    values:
+      - FCNResnetTransfer
+      - SegmentationCNN
+  out_channels:
+    distribution: int_uniform
+    max: 8
+    min: 2
+program: ./scripts/train.py
