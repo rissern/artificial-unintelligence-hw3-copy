@@ -51,7 +51,7 @@ def restitch_and_plot(
     axs[0].set_title("RGB image")
     axs[0].imshow(rgb_image)
     axs[1].set_title("Ground truth")
-    axs[1].imshow(subtile.ground_truth.values[0][0], cmap=cmap, vmin=-0.5, vmax=3.5)
+    axs[1].imshow(subtile.ground_truth.values[0][0]-1, cmap=cmap, vmin=-0.5, vmax=3.5)
     axs[2].set_title("Prediction")
     im = axs[2].imshow(y_pred, cmap=cmap, vmin=-0.5, vmax=3.5)
 
