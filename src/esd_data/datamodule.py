@@ -184,9 +184,16 @@ class ESDDataModule(pl.LightningDataModule):
             # The arrays will be the above list, the test_size will be 1 - train size, and the random_state will be the seed.
             # The output of this function will be a tuple, (tile directories for training the model, tile directories for validating the model).
             # Save the output into the two variables tile_dirs_train and tile_dirs_val.
-            tile_dirs_train, tile_dirs_val = train_test_split(
-                tile_dirs, test_size=1 - self.train_size, random_state=self.seed
-            )
+
+            if self.train_size == 1:
+                tile_dirs_train, tile_dirs_val = tile_dirs, []
+            else:
+                tile_dirs_train, tile_dirs_val = train_test_split(
+                                tile_dirs,
+                                test_size=1 - self.train_size,
+                                random_state=self.seed
+                )
+
 
             # We have now created the train test split. We are going to subtile and save these into
             # the self.train_dir and self.val_dir
@@ -253,6 +260,29 @@ class ESDDataModule(pl.LightningDataModule):
                 satellite_type_list=self.satellite_type_list,
                 slice_size=self.slice_size,
             )
+        
+        if stage == "test":
+            self.test_dataset = ESDDataset(
+                self.train_dir,
+                transform=self.transform,
+                satellite_type_list=self.satellite_type_list,
+                slice_size=self.slice_size,
+            )
+
+
+    def test_dataloader(self, num_workers=0) -> torch.utils.data.DataLoader:
+        """
+        Creates and returns a DataLoader with self.test_dataset
+        """
+        if num_workers is None:
+            num_workers = self.num_workers
+
+        return torch.utils.data.DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            collate_fn=collate_fn,
+            num_workers=num_workers,
+        )
 
     def train_dataloader(self, num_workers=0) -> torch.utils.data.DataLoader:
         """

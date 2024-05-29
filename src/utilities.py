@@ -71,7 +71,7 @@ class ESDConfig:
     model_path: Path = ROOT / "models" / MODEL / "last.ckpt"
     model_type: str = MODEL
     n_encoders: int = 2
-    num_workers: int = 0
+    num_workers: int = 8
     out_channels: int = 4  # 4 out channels for our 4 classes
     pool_sizes: str = "5,5,2"
     seed: int = 12378921
