@@ -22,6 +22,7 @@ def main(options):
 
     # prepare data
     dataModule.prepare_data()
+    dataModule.setup("fit")
 
     # load model from checkpoint
     # set model to eval mode
@@ -32,7 +33,7 @@ def main(options):
 
     # get a list of all processed tiles
     all_processed_tiles = [
-        tile.name for tile in (Path(options.processed_dir) / "Val" / "subtiles").iterdir() if tile.is_dir()
+        tile for tile in (Path(options.processed_dir) / "Val" / "subtiles").iterdir() if tile.is_dir()
     ]
     
     # for each tile
@@ -42,10 +43,8 @@ def main(options):
             options,
             datamodule=dataModule,
             model=model,
-            parent_tile_id=tile,
+            parent_tile_id=tile.name,
             accelerator=options.accelerator,
-            satellite_type=dataModule.satellite_type_list,
-            selected_bands=options.selected_bands,
             results_dir=options.results_dir,
         )
 
