@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
+import torch
 from torch.utils.data import Dataset
 from torchvision import transforms as torchvision_transforms
 
@@ -88,6 +89,9 @@ class ESDDataset(Dataset):
                 (time*bands, width, height) array
         """
         # merge the time and bands dimension (hint: use np.stack or np.reshape)
+
+        # assert dtype is float32
+        assert array.dtype == np.float32, f"array.dtype: {array.dtype} != np.float32"
         
         time, bands, width, height = array.shape
         new_img = array.reshape(time*bands, width, height)
@@ -151,7 +155,6 @@ class ESDDataset(Dataset):
 
             # set y to be the result for y
             y = transform_result["y"]
-
 
         # return X and y-1, labels go from 1-4, so y-1 makes them zero indexed
         return X, y-1

@@ -60,14 +60,11 @@ class ESDSegmentation(pl.LightningModule):
 
     def forward(self, X):
         # evaluate self.model
-        X = X.float()
         return self.model(X)
 
     def training_step(self, batch, batch_idx):
         # get sat_img and mask from batch
         sat_img, mask = batch
-        sat_img = sat_img.float()
-        mask = mask.long()
 
         # evaluate batch
         eval = self(sat_img)
@@ -82,8 +79,6 @@ class ESDSegmentation(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         # get sat_img and mask from batch
         sat_img, mask = batch
-        sat_img = sat_img.float()
-        mask = mask.long()
 
         # evaluate batch for validation
         eval = self(sat_img)

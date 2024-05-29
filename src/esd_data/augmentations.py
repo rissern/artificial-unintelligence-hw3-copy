@@ -106,11 +106,10 @@ class AddNoise(object):
         randome_std_dev = random.uniform(0, self.std_lim)
 
         # generate the noise using a random normal distribution from the mean, random standard deviation, and in the shape of the img
-        noise = np.random.normal(self.mean, randome_std_dev, img.shape)
+        noise = np.random.normal(self.mean, randome_std_dev, img.shape).astype(np.float32)
 
         # add the noise to the img and clip between 0 and 1
         noisy_img = np.clip(img + noise, 0, 1)
-
 
         # return the {X : img, y : mask}
         return {"X": noisy_img, "y": mask}
@@ -154,8 +153,7 @@ class RandomVFlip(object):
             img = apply_per_band(img, lambda x: cv2.flip(x, 0))
 
             # also flip the mask (not per band, just directly on the mask)
-            mask = cv2.flip(mask, 0)
-
+            mask = cv2.flip(mask, 0).astype(np.int64)
 
         # return the {X : img, y : mask}
         return {"X": img, "y": mask}
@@ -199,8 +197,7 @@ class RandomHFlip(object):
             img = apply_per_band(img, lambda x: cv2.flip(x, 1))
 
             # also flip the mask (not per band, just directly on the mask)
-            mask = cv2.flip(mask, 1)
-
+            mask = cv2.flip(mask, 1).astype(np.int64)
 
         # return the {X : img, y : mask}
         return {"X": img, "y": mask}

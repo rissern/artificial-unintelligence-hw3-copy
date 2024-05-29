@@ -82,6 +82,7 @@ def train(options: ESDConfig):
         logger=wandb_logger,
         max_epochs=options.max_epochs,
         callbacks=callbacks,
+        precision="32-true",
     )
 
     # run trainer.fit

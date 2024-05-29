@@ -106,6 +106,10 @@ class Subtile:
     def _save_image(
         self, subtiled_data_array: xr.DataArray, subtile_directory: Path, x: int, y: int
     ):
+        
+        # assert dtype is float32
+        assert subtiled_data_array.dtype == np.float32, f"{subtiled_data_array.dtype} != np.float32"
+
         subtiled_data_array.to_netcdf(
             subtile_directory
             / subtiled_data_array.attrs["parent_tile_id"]
@@ -120,6 +124,10 @@ class Subtile:
         x: int,
         y: int,
     ):
+        
+        # assert dtype is int64
+        assert subtiled_ground_truth.dtype == np.int64, f"{subtiled_ground_truth.dtype} != np.int64"
+
         subtiled_ground_truth.to_netcdf(
             subtile_directory
             / subtiled_ground_truth.attrs["parent_tile_id"]
@@ -208,7 +216,7 @@ class Subtile:
         satellite_type_list: List[SatelliteType],
         slice_size: Tuple[int, int] = (4, 4),
         has_gt: bool = True,
-    ) -> List[xr.DataArray]:
+    ) -> 'Subtile':
         """
         Loads a directory of subtile files ({parent_tile_id}_{x}_{y}.npy)
 
@@ -217,7 +225,7 @@ class Subtile:
             satellite_type_list: list of satellites to load
             slice_size: slice size of the subtile
         Returns:
-            List[xr.DataArray]
+            Subtile
         """
         list_of_subtiled_data_array = list()
         for satellite_type in satellite_type_list:
@@ -226,12 +234,20 @@ class Subtile:
 
             data_array = xr.load_dataarray(subtile_file)
 
+            # convert to float32
+            data_array = data_array.astype(np.float32)
+
             list_of_subtiled_data_array.append(data_array)
 
         if has_gt:
             gt_data_array = xr.load_dataarray(
                 directory_to_load / f"{SatelliteType.GT.value}.nc"
             )
+
+            # convert to int64
+            gt_data_array = gt_data_array.astype(np.int64)
+
+            assert gt_data_array.dtype == np.int64, f"{gt_data_array.dtype} != np.int64 should be mf"
         else:
             gt_data_array = None
 

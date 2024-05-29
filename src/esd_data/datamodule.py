@@ -13,6 +13,7 @@ import xarray as xr
 from sklearn.model_selection import train_test_split
 from torchvision import transforms as torchvision_transforms
 from tqdm import tqdm
+import numpy as np
 
 sys.path.append(".")
 from src.esd_data.augmentations import (
@@ -149,15 +150,15 @@ class ESDDataModule(pl.LightningDataModule):
                 preprocessed_data_array_list.append(
                     preprocess_functions[satellite_type](
                         data_array.sel(band=self.selected_bands[satellite_type])
-                    )
+                    ).astype(np.float32)
                 )
 
         if SatelliteType.VIIRS_MAX_PROJ in satellite_type_list:
             preprocessed_data_array_list.append(
-                maxprojection_viirs(load_satellite(tile_dir, SatelliteType.VIIRS))
+                maxprojection_viirs(load_satellite(tile_dir, SatelliteType.VIIRS)).astype(np.float32)
             )
 
-        return preprocessed_data_array_list, load_satellite(tile_dir, SatelliteType.GT)
+        return preprocessed_data_array_list, load_satellite(tile_dir, SatelliteType.GT).astype(np.int64)
 
     def prepare_data(self) -> None:
         """
@@ -194,6 +195,15 @@ class ESDDataModule(pl.LightningDataModule):
             for tile_dir in tqdm(list(tile_dirs_train), desc="Processing train tiles"):
                 # get the data array list and gt data array from load_and_preprocess
                 data_array_list, gt_data_array = self.load_and_preprocess(tile_dir)
+
+                # assert dtype of data_array_list is np.float32
+                assert all(
+                    data_array.dtype == np.float32
+                    for data_array in data_array_list
+                ), f"data_array_list.dtype: {data_array_list.dtype} != np.float32"
+
+                # assert dtype of gt_data_array is np.int64
+                assert gt_data_array.dtype == np.int64, f"gt_data_array.dtype: {gt_data_array.dtype} != np.int64"
 
                 # create a subtile, passing the data array list, gt data array, and the slice size
                 subtile = Subtile(
