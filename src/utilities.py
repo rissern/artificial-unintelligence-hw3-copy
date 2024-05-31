@@ -18,7 +18,7 @@ class SatelliteType(Enum):
 
 ROOT = Path.cwd()
 PROJ_NAME = "CS175-spring-2024"
-MODEL = "FCNResnetTransfer"  # default, valid values are ["UNet", "SegmentationCNN", "FCNResnetTransfer"] # fmt: skip
+MODEL = "UNet"  # default, valid values are ["UNet", "SegmentationCNN", "FCNResnetTransfer"] # fmt: skip
 
 
 @dataclass
@@ -27,36 +27,36 @@ class ESDConfig:
     raw_dir: Path = ROOT / "data" / "raw" / "Train"
     results_dir: Path = ROOT / "data" / "predictions" / MODEL
     selected_bands = {
-        SatelliteType.VIIRS: ["0"],
-        SatelliteType.S1: ["VV", "VH"],
-        SatelliteType.S2: [
+        SatelliteType.VIIRS: ["0"], # 9 dates
+        # SatelliteType.S1: ["VV", "VH"], # 4 dates
+        SatelliteType.S2: [ # 4 dates
             "12",
             "11",
-            "09",
-            "8A",
+            # "09",
+            # "8A",
             "08",
-            "07",
-            "06",
-            "05",
+            # "07",
+            # "06",
+            # "05",
             "04",
             "03",
             "02",
-            "01",
+            # "01",
         ],
-        SatelliteType.LANDSAT: [
-            "11",
-            "10",
-            "9",
-            "8",
-            "7",
-            "6",
-            "5",
-            "4",
-            "3",
-            "2",
-            "1",
-        ],
-        SatelliteType.VIIRS_MAX_PROJ: ["0"],
+        # SatelliteType.LANDSAT: [ # 3 dates
+        #     "11",
+        #     "10",
+        #     "9",
+        #     "8",
+        #     "7",
+        #     "6",
+        #     "5",
+        #     "4",
+        #     "3",
+        #     "2",
+        #     "1",
+        # ],
+        # SatelliteType.VIIRS_MAX_PROJ: ["0"]
     }
 
     accelerator: str = "cpu"
@@ -64,14 +64,14 @@ class ESDConfig:
     depth: int = 2
     devices: int = 1
     embedding_size: int = 64
-    in_channels: int = 99  # num_dates * num_bands
+    in_channels: int = 33  # num_dates * num_bands 99 total
     kernel_size: int = 3
     learning_rate: float = 1e-3
-    max_epochs: int = 1
+    max_epochs: int = 100
     model_path: Path = ROOT / "models" / MODEL / "last.ckpt"
     model_type: str = MODEL
-    n_encoders: int = 2
-    num_workers: int = 0
+    n_encoders: int = 8
+    num_workers: int = 6
     out_channels: int = 4  # 4 out channels for our 4 classes
     pool_sizes: str = "5,5,2"
     seed: int = 12378921

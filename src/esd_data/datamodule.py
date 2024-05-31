@@ -11,6 +11,7 @@ import torch.utils.data
 import torch.utils.data.dataloader
 import xarray as xr
 from sklearn.model_selection import train_test_split
+from torchvision.transforms import v2
 from torchvision import transforms as torchvision_transforms
 from tqdm import tqdm
 import numpy as np
@@ -21,6 +22,7 @@ from src.esd_data.augmentations import (
     Blur,
     RandomHFlip,
     RandomVFlip,
+    Rotate,
     ToTensor,
 )
 from src.esd_data.dataset import ESDDataset
@@ -94,8 +96,9 @@ class ESDDataModule(pl.LightningDataModule):
         transform_list: list = [
             torchvision_transforms.RandomApply([AddNoise()], p=0.5),
             torchvision_transforms.RandomApply([Blur()], p=0.5),
-            torchvision_transforms.RandomApply([RandomHFlip()], p=0.5),
-            torchvision_transforms.RandomApply([RandomVFlip()], p=0.5),
+            torchvision_transforms.RandomApply([RandomHFlip(p=1)], p=0.5),
+            torchvision_transforms.RandomApply([RandomVFlip(p=1)], p=0.5),
+            v2.RandomChoice([Rotate(0), Rotate(90), Rotate(180), Rotate(270)]),
             ToTensor(),
         ],
     ):
@@ -270,7 +273,7 @@ class ESDDataModule(pl.LightningDataModule):
             )
 
 
-    def test_dataloader(self, num_workers=0) -> torch.utils.data.DataLoader:
+    def test_dataloader(self, num_workers=None) -> torch.utils.data.DataLoader:
         """
         Creates and returns a DataLoader with self.test_dataset
         """
@@ -282,9 +285,10 @@ class ESDDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             collate_fn=collate_fn,
             num_workers=num_workers,
+            persistent_workers=True,
         )
 
-    def train_dataloader(self, num_workers=0) -> torch.utils.data.DataLoader:
+    def train_dataloader(self, num_workers=None) -> torch.utils.data.DataLoader:
         """
         Creates and returns a DataLoader with self.train_dataset
         """
@@ -299,9 +303,10 @@ class ESDDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             collate_fn=collate_fn,
             num_workers=num_workers,
+            persistent_workers=True
         )
 
-    def val_dataloader(self, num_workers=0) -> torch.utils.data.DataLoader:
+    def val_dataloader(self, num_workers=None) -> torch.utils.data.DataLoader:
         """
         Creates and returns a DataLoader with self.val_dataset
         """
@@ -316,4 +321,5 @@ class ESDDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             collate_fn=collate_fn,
             num_workers=num_workers,
+            persistent_workers=True,
         )

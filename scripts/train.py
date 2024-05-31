@@ -61,13 +61,13 @@ def train(options: ESDConfig):
     callbacks = [
         ModelCheckpoint(
             dirpath=ROOT / "models" / options.model_type,
-            filename="{epoch}-{val_loss:.2f}-{other_metric:.2f}",
-            save_top_k=0,
+            filename="{epoch}-{eval_f1:.2f}-{eval_accuracy:.2f}-{eval_loss:.2f}",
+            save_top_k=1,
             save_last=True,
             verbose=True,
-            monitor="val_loss",
-            mode="min",
-            every_n_train_steps=1000,
+            monitor="eval_f1",
+            mode="max",
+            # every_n_train_steps=1000,
         ),
         LearningRateMonitor(),
         RichProgressBar(),

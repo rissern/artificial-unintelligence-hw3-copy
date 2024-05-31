@@ -1,6 +1,6 @@
 import torch
 import pytorch_lightning as pl
-from torch.optim import Adam
+from torch.optim import Adam, SGD, AdamW
 from torch import nn
 import torchmetrics
 
@@ -58,6 +58,16 @@ class ESDSegmentation(pl.LightningModule):
             multidim_average="global",
         )  # not sure the parameters are correct
 
+        # f1 score
+        self.train_f1_metrics = torchmetrics.F1Score(
+            task="multiclass",
+            num_classes=out_channels, 
+        )
+        self.eval_f1_metrics = torchmetrics.F1Score(
+            task="multiclass",
+            num_classes=out_channels, 
+        )
+
     def forward(self, X):
         # evaluate self.model
         return self.model(X)
@@ -74,6 +84,8 @@ class ESDSegmentation(pl.LightningModule):
 
         # return loss
         self.log("train_loss", loss)
+        self.log("train_accuracy", self.train_accuracy_metrics(eval, mask), on_epoch=True)
+        self.log("train_f1", self.train_f1_metrics(eval, mask), on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -91,13 +103,18 @@ class ESDSegmentation(pl.LightningModule):
         acc = self.eval_accuracy_metrics(eval, mask)
         self.log("eval_loss", loss)
         self.log("eval_accuracy", acc, on_epoch=True)
+        self.log("eval_f1", self.eval_f1_metrics(eval, mask), on_epoch=True)
 
         # return validation loss
         return loss
 
     def configure_optimizers(self):
         # initialize optimizer
-        optimizer = Adam(self.parameters(), lr=self.learning_rate)
+        # optimizer = Adam(self.parameters(), lr=self.learning_rate, weight_decay=1e-5)
+
+        # optimizer = SGD(self.parameters(), lr=self.learning_rate, momentum=0.9)
+
+        optimizer = AdamW(self.parameters(), lr=self.learning_rate, weight_decay=0.001)
 
         # return optimizer
         return optimizer

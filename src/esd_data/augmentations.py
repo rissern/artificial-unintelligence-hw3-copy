@@ -202,6 +202,59 @@ class RandomHFlip(object):
         # return the {X : img, y : mask}
         return {"X": img, "y": mask}
 
+class Rotate(object):
+    """
+    Rotates all bands in an image by given degrees.
+
+    Parameters:
+        degrees: 0 | 90 | 180 | 270
+            Number of degrees to rotate the image by.
+    """
+
+    def __init__(self, degrees=90):
+        
+        self.rotation_map = {
+            0: None,
+            90: cv2.ROTATE_90_CLOCKWISE ,
+            180: cv2.ROTATE_180,
+            270: cv2.ROTATE_90_COUNTERCLOCKWISE
+        }
+
+        self.rotation = None
+        if degrees in self.rotation_map:
+            self.rotation = self.rotation_map[degrees]
+
+    def __call__(self, sample):
+        """
+        Performs the rotate transformation using cv.rotate.
+
+        Input:
+            sample: Dict[str, np.ndarray]
+                Has two keys, 'X' and 'y'.
+                Each of them has shape (time*band, width, height)
+
+        Output:
+            transformed: Dict[str, np.ndarray]
+                Has two keys, 'X' and 'y'.
+                Each of them has shape (time*band, width, height)
+        """
+        # sample must have X and y in a dictionary format
+        img, mask = sample["X"], sample["y"]
+
+        # --- start here ---
+        # some sort of if statement that uses self.p to determine whether or not to act,
+        # probably using random.random() (there are so many ways to do this, we just want it to
+        # act only self.p% of the time)
+        if self.rotation is not None:
+
+            # apply per band the cv2.rotate function (you can pass it as a lambda)
+            img = apply_per_band(img, lambda x: cv2.rotate(x, self.rotation))
+
+            # also rotate the mask (not per band, just directly on the mask)
+            mask = cv2.rotate(mask, self.rotation).astype(np.int64)
+
+        # return the {X : img, y : mask}
+        return {"X": img, "y": mask}
 
 class ToTensor(object):
     """

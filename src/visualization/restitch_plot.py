@@ -107,7 +107,7 @@ def restitch_eval(
             predictions = None
             if accelerator == "cpu":
                 predictions = model(X.float())
-            elif accelerator == "gpu":
+            elif accelerator == "gpu" or accelerator == "cuda":
                 predictions = model(X.float().cuda())
             assert (
                 predictions != None
